@@ -1,0 +1,229 @@
+---
+title: "Data Challenge 5"
+author: "Xueqi Huang"
+date: "December 04, 2021"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+---
+Github: https://github.com/vickynugget/DSI_DataChallenge5.git
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r}
+# load library
+library(readxl)
+library(readr)
+library(tidyverse)
+library(janitor)
+library(lubridate) 
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+library(GGally)
+library(plotly)
+library(stringr)
+```
+
+## Loading/Cleaning Data and Exploratory Analysis
+```{r}
+# read data
+nndb_flat <- read.csv('nndb_flat.csv')
+
+
+nndb_flat <- nndb_flat %>%
+  # filter the data to contain only specific food groups
+  filter(FoodGroup == 'Vegetables and Vegetable Products' | 
+           FoodGroup == 'Beef Products' | 
+           FoodGroup == 'Sweets')
+
+nndb_data <- nndb_flat %>%
+  # select only the variables from Energy_kcal to Zinc_mg
+  select(Energy_kcal:Zinc_mg)
+
+# examine the correlation among the variables
+ggcorr(nndb_data, size = 3)
+```
+Manganese and Vitamin A, Thiamin and Folate have the highest correlations and they are postive correlated. Zinc and protein, fat and energy, sugar and carb, Thiamin and Riboflavin also have high positive correlations. 
+
+
+## Performing PCA
+### 1. Perform PCA and scale the data
+```{r}
+# perform PCA and scale the data
+pca_nndb <- prcomp(nndb_data, center = TRUE, scale. = TRUE)
+
+# Calculate the Cumulative proportion of the variation explained by each PC
+var <- pca_nndb$sdev^2
+cum <- cumsum(var/sum(var))
+
+# Format into a data frame
+var_explained_df <- data.frame(PC = paste0("PC",1:23),
+                               var_explained = cum)
+
+# format the order of PCs
+var_explained_df$PC <- factor(var_explained_df$PC, levels = var_explained_df$PC)
+```
+
+### 2. Make a plot showing the cumulative proportion of the variation explained by each PC
+```{r}
+var_explained_df %>%
+  # initialize ggplot with PC on the x-axis and cumulative variation explained on the y-axis
+  ggplot(aes(x = PC, y = var_explained, group = 1)) + 
+  geom_point() + # add points to the plot
+  geom_line() + # add lines to the plot
+  labs(title="Cumulative proportion of the variation explained", # add title
+       y = 'Cumulated Variance Explained', # add y-axis label
+       x = 'PC') + # add x-axis label
+  theme(axis.text.x=element_text(angle=40, hjust=1)) # rotate the x labels
+```
+
+### 3. Make plots for the loadings on the first 3 PCs
+```{r}
+# get loadings for the first 3 PCs which explain about 60% of the variation in the data
+pca_nndb_loadings <- as.data.frame(pca_nndb$rotation) %>% # get the loadings
+  select(PC1, PC2, PC3) %>% # select first 3 PCs
+  mutate(variable = rownames(pca_nndb$rotation)) %>% # add variable names
+  pivot_longer(cols = c('PC1', 'PC2', 'PC3'), # transfer the data into longer format
+               names_to = 'PC',
+               values_to = 'loadings') 
+
+# make 3 separate plots for the loadings for the first 3 PCs for all of the variables
+for (i in c('PC1', 'PC2', 'PC3')){
+  plot <- pca_nndb_loadings %>%
+    filter(PC == i) %>% # filter out the loadings for specific PC
+    ggplot(aes(x = reorder(variable, abs(loadings)), y = loadings)) + # initialize ggplot
+    geom_bar(stat = 'identity') + # make a bar plot
+    labs(title=paste("Loadings for", i), # add title
+         y = 'Loadings', # add y-axis label
+         x = 'Variable') + # add x-axis label
+    theme(axis.text.x=element_text(angle=40, hjust=1)) # rotate the x labels
+  # output the plot
+  print(plot)
+}
+
+```
+
+### 4. Make plots of the scores on the PCs
+```{r}
+# create a data frame of scores
+pca_scores <- as.data.frame(pca_nndb$x) %>% # get the scores
+  mutate(FoodGroup = nndb_flat$FoodGroup) # add the food group column
+
+# PC1 versus PC2
+pc1_pc2 <- ggplot(pca_scores, 
+                  aes(x = PC1, y = PC2, col = FoodGroup)) + # initialize ggplot
+  geom_point() # make a scatter plot
+ggplotly(pc1_pc2) # interactive plot
+
+# PC1 versus PC3
+pc1_pc3 <- ggplot(pca_scores, 
+                  aes(x = PC1, y = PC3, col = FoodGroup)) + # initialize ggplot
+  geom_point() # make a scatter plot
+ggplotly(pc1_pc3) # interactive plot
+
+# PC2 versus PC3
+pc2_pc3 <- ggplot(pca_scores, 
+                  aes(x = PC2, y = PC3, col = FoodGroup)) + # initialize ggplot
+  geom_point() # make a scatter plot
+ggplotly(pc2_pc3) # interactive plot
+
+
+```
+
+## Identify Outlier and Performing PCA Again
+
+The outlier is in the Vegetables and Vegetables Products group. 
+
+### 1. Remove the outlier
+```{r}
+# find the index of the outlier, which has PC1 greater than 30
+outlier_idx <- which(pca_scores[,'PC1'] > 30)
+
+# remove the outlier
+nndb_flat_new <- nndb_flat[-2108,]
+
+nndb_data_new <- nndb_flat_new %>%
+  # select only the variables from Energy_kcal to Zinc_mg
+  select(Energy_kcal:Zinc_mg)
+```
+
+### 2. Perform PCA again
+```{r}
+# perform PCA and scale the data
+pca_nndb <- prcomp(nndb_data_new, center = TRUE, scale. = TRUE)
+
+# format proportion of the variation explained by each PC into a data frame
+var <- pca_nndb$sdev^2
+cum <- cumsum(var/sum(var))
+
+# Format into a data frame
+var_explained_df <- data.frame(PC = paste0("PC",1:23),
+                               var_explained = cum)
+
+# format the order of PCs
+var_explained_df$PC <- factor(var_explained_df$PC, levels = var_explained_df$PC)
+
+# Make a plot showing the cumulative proportion of the variation explained by each PC
+var_explained_df %>%
+  # initialize ggplot with PC on the x-axis and cumulative variation explained on the y-axis
+  ggplot(aes(x = PC, y = var_explained, group = 1)) + 
+  geom_point() + # add points to the plot
+  geom_line() + # add lines to the plot
+  labs(title="Cumulative proportion of the variation explained", # add title
+       y = 'Cumulated Variance Explained', # add y-axis label
+       x = 'PC') + # add x-axis label
+  theme(axis.text.x=element_text(angle=40, hjust=1)) # rotate the x labels
+
+
+# get loadings for the first 3 PCs which explain about 60% of the variation in the data
+pca_nndb_loadings <- as.data.frame(pca_nndb$rotation) %>% # get the loadings
+  select(PC1, PC2, PC3) %>% # select first 3 PCs
+  mutate(variable = rownames(pca_nndb$rotation)) %>% # add variable names
+  pivot_longer(cols = c('PC1', 'PC2', 'PC3'), # transfer the data into longer format
+               names_to = 'PC',
+               values_to = 'loadings') 
+
+# make 3 separate plots for the loadings for the first 3 PCs for all of the variables
+for (i in c('PC1', 'PC2', 'PC3')){
+  plot <- pca_nndb_loadings %>%
+    filter(PC == i) %>% # filter out the loadings for specific PC
+    ggplot(aes(x = reorder(variable, abs(loadings)), y = loadings)) + # initialize ggplot
+    geom_bar(stat = 'identity') + # make a bar plot
+    labs(title=paste("Loadings for", i), # add title
+         y = 'Loadings', # add y-axis label
+         x = 'Variable') + # add x-axis label
+    theme(axis.text.x=element_text(angle=40, hjust=1)) # rotate the x labels
+  # output the plot
+  print(plot)
+}
+
+
+# make 3 plots of the scores on the PCs colored by food group
+# create a data frame of scores
+pca_scores <- as.data.frame(pca_nndb$x) %>% # get the scores
+  mutate(FoodGroup = nndb_flat_new$FoodGroup) # add the food group column
+
+# PC1 versus PC2
+pc1_pc2 <- ggplot(pca_scores, 
+                  aes(x = PC1, y = PC2, col = FoodGroup)) + # initialize ggplot
+  geom_point() # make a scatter plot
+ggplotly(pc1_pc2) # interactive plot
+
+# PC1 versus PC3
+pc1_pc3 <- ggplot(pca_scores, 
+                  aes(x = PC1, y = PC3, col = FoodGroup)) + # initialize ggplot
+  geom_point() # make a scatter plot
+ggplotly(pc1_pc3) # interactive plot
+
+# PC2 versus PC3
+pc2_pc3 <- ggplot(pca_scores, 
+                  aes(x = PC2, y = PC3, col = FoodGroup)) + # initialize ggplot
+  geom_point() # make a scatter plot
+ggplotly(pc2_pc3) # interactive plot
+```
+

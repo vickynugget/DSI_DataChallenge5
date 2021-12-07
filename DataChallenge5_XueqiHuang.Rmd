@@ -75,10 +75,10 @@ var_explained_df %>%
   ggplot(aes(x = PC, y = var_explained, group = 1)) + 
   geom_point() + # add points to the plot
   geom_line() + # add lines to the plot
-  labs(title="Cumulative proportion of the variation explained", # add title
+  labs(title = "Cumulative proportion of the variation explained", # add title
        y = 'Cumulated Variance Explained', # add y-axis label
        x = 'PC') + # add x-axis label
-  theme(axis.text.x=element_text(angle=40, hjust=1)) # rotate the x labels
+  theme(axis.text.x=element_text(angle = 40, hjust = 1)) # rotate the x labels
 ```
 
 ### 3. Make plots for the loadings on the first 3 PCs
@@ -97,10 +97,10 @@ for (i in c('PC1', 'PC2', 'PC3')){
     filter(PC == i) %>% # filter out the loadings for specific PC
     ggplot(aes(x = reorder(variable, abs(loadings)), y = loadings)) + # initialize ggplot
     geom_bar(stat = 'identity') + # make a bar plot
-    labs(title=paste("Loadings for", i), # add title
+    labs(title = paste("Loadings for", i), # add title
          y = 'Loadings', # add y-axis label
          x = 'Variable') + # add x-axis label
-    theme(axis.text.x=element_text(angle=40, hjust=1)) # rotate the x labels
+    theme(axis.text.x = element_text(angle=40, hjust=1)) # rotate the x labels
   # output the plot
   print(plot)
 }
@@ -116,19 +116,22 @@ pca_scores <- as.data.frame(pca_nndb$x) %>% # get the scores
 # PC1 versus PC2
 pc1_pc2 <- ggplot(pca_scores, 
                   aes(x = PC1, y = PC2, col = FoodGroup)) + # initialize ggplot
-  geom_point() # make a scatter plot
+  geom_point() + # make a scatter plot
+  labs(title = 'PC1 vs PC2') # add a title
 ggplotly(pc1_pc2) # interactive plot
 
 # PC1 versus PC3
 pc1_pc3 <- ggplot(pca_scores, 
                   aes(x = PC1, y = PC3, col = FoodGroup)) + # initialize ggplot
-  geom_point() # make a scatter plot
+  geom_point() + # make a scatter plot
+  labs(title = 'PC1 vs PC3') # add a title
 ggplotly(pc1_pc3) # interactive plot
 
 # PC2 versus PC3
 pc2_pc3 <- ggplot(pca_scores, 
                   aes(x = PC2, y = PC3, col = FoodGroup)) + # initialize ggplot
-  geom_point() # make a scatter plot
+  geom_point() + # make a scatter plot
+  labs(title = 'PC2 vs PC3') # add a title
 ggplotly(pc2_pc3) # interactive plot
 
 
@@ -173,10 +176,10 @@ var_explained_df %>%
   ggplot(aes(x = PC, y = var_explained, group = 1)) + 
   geom_point() + # add points to the plot
   geom_line() + # add lines to the plot
-  labs(title="Cumulative proportion of the variation explained", # add title
+  labs(title = "Cumulative proportion of the variation explained", # add title
        y = 'Cumulated Variance Explained', # add y-axis label
        x = 'PC') + # add x-axis label
-  theme(axis.text.x=element_text(angle=40, hjust=1)) # rotate the x labels
+  theme(axis.text.x=element_text(angle = 40, hjust = 1)) # rotate the x labels
 
 
 # get loadings for the first 3 PCs which explain about 60% of the variation in the data
@@ -193,10 +196,10 @@ for (i in c('PC1', 'PC2', 'PC3')){
     filter(PC == i) %>% # filter out the loadings for specific PC
     ggplot(aes(x = reorder(variable, abs(loadings)), y = loadings)) + # initialize ggplot
     geom_bar(stat = 'identity') + # make a bar plot
-    labs(title=paste("Loadings for", i), # add title
+    labs(title = paste("Loadings for", i), # add title
          y = 'Loadings', # add y-axis label
          x = 'Variable') + # add x-axis label
-    theme(axis.text.x=element_text(angle=40, hjust=1)) # rotate the x labels
+    theme(axis.text.x = element_text(angle = 40, hjust = 1)) # rotate the x labels
   # output the plot
   print(plot)
 }
@@ -210,19 +213,22 @@ pca_scores <- as.data.frame(pca_nndb$x) %>% # get the scores
 # PC1 versus PC2
 pc1_pc2 <- ggplot(pca_scores, 
                   aes(x = PC1, y = PC2, col = FoodGroup)) + # initialize ggplot
-  geom_point() # make a scatter plot
+  geom_point() + # make a scatter plot
+  labs(title = 'PC1 vs PC2') # add a title
 ggplotly(pc1_pc2) # interactive plot
 
 # PC1 versus PC3
 pc1_pc3 <- ggplot(pca_scores, 
                   aes(x = PC1, y = PC3, col = FoodGroup)) + # initialize ggplot
-  geom_point() # make a scatter plot
+  geom_point() + # make a scatter plot
+  labs(title = 'PC1 vs PC3') # add a title
 ggplotly(pc1_pc3) # interactive plot
 
 # PC2 versus PC3
 pc2_pc3 <- ggplot(pca_scores, 
                   aes(x = PC2, y = PC3, col = FoodGroup)) + # initialize ggplot
-  geom_point() # make a scatter plot
+  geom_point() + # make a scatter plot 
+  labs(title = 'PC2 vs PC3') # add a title
 ggplotly(pc2_pc3) # interactive plot
 ```
 

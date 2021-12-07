@@ -56,7 +56,10 @@ Manganese and Vitamin A, Thiamin and Folate have the highest correlations and th
 ```{r}
 # perform PCA and scale the data
 pca_nndb <- prcomp(nndb_data, center = TRUE, scale. = TRUE)
+```
 
+### 2. Make a plot showing the cumulative proportion of the variation explained by each PC
+```{r}
 # Calculate the Cumulative proportion of the variation explained by each PC
 var <- pca_nndb$sdev^2
 cum <- cumsum(var/sum(var))
@@ -67,10 +70,6 @@ var_explained_df <- data.frame(PC = paste0("PC",1:23),
 
 # format the order of PCs
 var_explained_df$PC <- factor(var_explained_df$PC, levels = var_explained_df$PC)
-```
-
-### 2. Make a plot showing the cumulative proportion of the variation explained by each PC
-```{r}
 var_explained_df %>%
   # initialize ggplot with PC on the x-axis and cumulative variation explained on the y-axis
   ggplot(aes(x = PC, y = var_explained, group = 1)) + 

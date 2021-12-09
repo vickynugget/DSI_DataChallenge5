@@ -16,17 +16,11 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```{r}
 # load library
-library(readxl)
-library(readr)
 library(tidyverse)
 library(janitor)
-library(lubridate) 
 library(ggplot2)
-library(lubridate)
-library(dplyr)
 library(GGally)
 library(plotly)
-library(stringr)
 ```
 
 ## Loading/Cleaning Data and Exploratory Analysis
@@ -46,9 +40,13 @@ nndb_data <- nndb_flat %>%
   select(Energy_kcal:Zinc_mg)
 
 # examine the correlation among the variables
-ggcorr(nndb_data, size = 3)
+ggcorr(nndb_data,        
+       hjust = 1, 
+       size = 2, 
+       layout.exp = 2) # adjust label
 ```
-Manganese and Vitamin A, Thiamin and Folate have the highest correlations and they are postive correlated. Zinc and protein, fat and energy, sugar and carb, Thiamin and Riboflavin also have high positive correlations. 
+
+Manganese and Vitamin A, Thiamin and Folate have the highest correlations and they are positive correlated. Zinc and protein, fat and energy, sugar and carb, Thiamin and Riboflavin also have high positive correlations. 
 
 
 ## Performing PCA
@@ -104,7 +102,6 @@ for (i in c('PC1', 'PC2', 'PC3')){
   # output the plot
   print(plot)
 }
-
 ```
 
 ### 4. Make plots of the scores on the PCs
@@ -147,7 +144,7 @@ The outlier is in the Vegetables and Vegetables Products group.
 outlier_idx <- which(pca_scores[,'PC1'] > 30)
 
 # remove the outlier
-nndb_flat_new <- nndb_flat[-2108,]
+nndb_flat_new <- nndb_flat[-outlier_idx,]
 
 nndb_data_new <- nndb_flat_new %>%
   # select only the variables from Energy_kcal to Zinc_mg
@@ -232,3 +229,7 @@ pc2_pc3 <- ggplot(pca_scores,
 ggplotly(pc2_pc3) # interactive plot
 ```
 
+Yes. Because we scale the data before performing PCA, so after remore the outliers the value after scaling will change. The loadings and score of PCA will change as a result. 
+
+### Describe what you see 
+From the plot of PC1 and PC2 loadings shows most of the loading were positive, while most loadings of PC3 were negative. So in the plot of scores, most scores of PC1 and PC2 lies in the first quadrant, in the plot of PC1 and PC3 most points lies below x-axis and left of the y-axis. In the plot of PC2 and PC3 most points lies below x-axis and right of y-axis. 
